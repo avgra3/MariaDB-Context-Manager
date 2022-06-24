@@ -40,3 +40,23 @@ with MariaDBCM(host, user, password, password, port) as conn:
     for row in rows:
         print(rows[row])
 ```
+
+## Supported Data Types
+
+Several standard python types are converted into SQL types and returned as Python objects when a statement is executed.
+
+| Python Type | SQL Type |
+|:--- | :--- |
+| None | NULL |
+| Bool | TINYINT |
+| Float, Double | DOUBLE |
+| Decimal | DECIMAL |
+| Long | TINYINT, SMALLINT, INT, BIGINT |
+| String | VARCHAR, VARSTRING, TEXT |
+| ByteArray, Bytes | TINYBLOB, MEDIUMBLOB, BLOB, LONGBLOB |
+| DateTime | DATETIME |
+| Date | DATE |
+| Time | TIME |
+| Timestamp | TIMESTAMP |
+
+For more information, see the [documentation](https://mariadb-corporation.github.io/mariadb-connector-python/usage.html) for more information.
