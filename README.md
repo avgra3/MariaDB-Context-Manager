@@ -30,7 +30,7 @@ host = "HOST"
 user = "USER"
 password = "PASSWORD"
 database = "DATABASE_NAME"
-port = PORT
+port = "3306" # The default MariaDB port
 
 # items to enter: host: str, user: str, password: str, database: str, port: int
 with MariaDBCM(host, user, password, database, port) as conn:
