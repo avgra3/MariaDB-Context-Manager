@@ -32,7 +32,7 @@ database = "DATABASE_NAME"
 port = PORT
 
 # items to enter: host: str, user: str, password: str, database: str, port: int
-with MariaDBCM(host, user, password, password, port) as conn:
+with MariaDBCM(host, user, password, database, port) as conn:
     conn.cur.execute(query)
     rows = conn.cur.fetchall()
     
