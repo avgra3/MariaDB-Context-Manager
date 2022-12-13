@@ -19,7 +19,7 @@ If you encounter an error/exception while trying to connect to the database, the
 
 ### Example:
 
-```python:
+```python
 from contextManager import MariaDBCM
 
 # Our query we are using
