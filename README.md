@@ -21,6 +21,7 @@ If you encounter an error/exception while trying to connect to the database, the
 
 ```python
 from contextManager import MariaDBCM
+import pandas as pd
 
 # Our query we are using
 query = """SELECT * FROM table;"""
@@ -36,10 +37,13 @@ port = "3306" # The default MariaDB port
 with MariaDBCM(host, user, password, database, port) as conn:
     conn.cur.execute(query)
     rows = conn.cur.fetchall()
-    
-    # Getting data
-    for row in rows:
-        print(rows[row])
+    # Get column names
+    cols = []
+    for item in list(conn.cur.description):
+        cols.append(item[0])
+
+# Show data in a dataframe
+df = pd.DataFrame(rows, columns=cols)
 ```
 
 ## Supported Data Types
