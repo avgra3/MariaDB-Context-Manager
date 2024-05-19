@@ -1,6 +1,11 @@
 # MariaDB Conext Manager
+## Simpler setup
 
-## Setting Up
+```pip install mariadb-context-manager```
+
+
+## Manual Setup
+### Setting Up
 
 Once you have your enviornment set up, run the following in your terminal or command line.
 
@@ -11,7 +16,7 @@ pip install -r requirements.txt
 __Note:__ For Linux or Mac systems, you may need to change "pip" to "pip3".
 __Note:__ For Anaconda/Miniconda users, this module is not currently in any repositories, however, you can still use pip to install MariaDB package using the same command as above - but be aware that it may cause conflicts with packages you are using.
 
-## Implementing the Context Manager
+### Implementing the Context Manager
 
 Before you run your query, make sure that you have MariaDB installed locally or have a connection to a MariaDB database.
 
