@@ -17,7 +17,7 @@ jobs:
         with:
           python-version: "3.x"
       - name: Install mariadb-connector-c
-        run: sudo apt-get install -y mariadb-connector-c
+        run: sudo apt-get install -y mariadb-client
       - name: Install pypa/build
         run: >-
           python3 -m
