@@ -4,16 +4,16 @@ with open("README.md", "r", encoding = "utf-8") as fh:
     long_description = fh.read()
 
 setuptools.setup(
-    name = "package-name",
-    version = "0.0.1",
-    author = "agradillas",
-    author_email = "author@example.com",
-    description = "short package description",
+    name = "MariaDB-Context-Manager",
+    version = "0.1.2",
+    author = "Antony",
+    author_email = "antonygradillas@gmail.com",
+    description = "A context manager to use with Python to easily connect and run querries in MariaDB",
     long_description = long_description,
     long_description_content_type = "text/markdown",
     url = "package URL",
     project_urls = {
-        "Bug Tracker": "package issues URL",
+        "Bug Tracker": "https://github.com/avgra3/MariaDB-Context-Manager/issues",
     },
     classifiers = [
         "Programming Language :: Python :: 3",
