@@ -1,2 +1,5 @@
 /dist/*
-/src/*
+/src/MariaDB_Context_Manager.egg-info
+*/__pycache__/*
+src/contextManager/__pycache__/__init__.cpython-311.pyc
+src/contextManager/__pycache__/contextManager.cpython-311.pyc
