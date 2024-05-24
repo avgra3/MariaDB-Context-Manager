@@ -1,0 +1,27 @@
+version: '3.1'
+
+services:
+  # MariaDB
+  db:
+    image: mariadb:lts-jammy
+    restart: always
+    volumes:
+      - test_mariadb_data:/var/lib/mysql:Z
+    ports:
+      - 33066:3066
+    environment:
+      - MARIADB_ROOT_PASSWORD: example
+      - MARIADB_USER: example-user
+      - MARIADB_PASWORD: my_cool_secret
+      - MARIADB_DATABASE: exmple-database
+    command: 
+
+  # Monitor the database
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - 8080:8080
+
+  volumes:
+    test_mariadb_data: {}

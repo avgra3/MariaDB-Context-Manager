@@ -1,0 +1,9 @@
+[server]
+host = "localhost"
+port = 33066
+
+[database]
+database = "exmple-database"
+local_infile = false
+username = "example-user"
+password = "my_cool_secret"

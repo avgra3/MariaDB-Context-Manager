@@ -43,12 +43,13 @@ class MariaDBCM:
         query_results = {"statement": ran_query.statement, "rows_updated": ran_query.rowcount, "number_of_warnings": ran_query.warnings}
         return query_results
 
-    def execute(self, queries: str) -> None:
+    def execute(self, queries: str) -> list:
         query_list = (self.__remove_comments(queries)).split(";")
         query_results = []
         for query in query_list:
             if query.strip() != "":
                 query_results.append(self.__execute_query(query))
+        return query_results
     
     def execute_change(self, statement: str, parameters: tuple) -> dict:
         if statement.strip() != "" and parameters is not None:
