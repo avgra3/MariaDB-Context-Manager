@@ -1,16 +1,18 @@
 # MariaDB Conext Manager
 ## Simpler setup
 
-```pip install mariadb-context-manager```
+```bash
+pip install mariadb-context-manager
+```
 
 
 ## Manual Setup
 ### Setting Up
 
-Once you have your enviornment set up, run the following in your terminal or command line.
+Once you have your enviornment set up, run the following in your terminal or command line to get the latest version:
 
-```
-pip install -r requirements.txt
+```bash
+pip install --upgrade git+https://github.com/avgra3/MariaDB-Context-Manager.git
 ```
 
 __Note:__ For Linux or Mac systems, you may need to change "pip" to "pip3".
@@ -22,10 +24,10 @@ Before you run your query, make sure that you have MariaDB installed locally or 
 
 If you encounter an error/exception while trying to connect to the database, the connection will be closed and the exception will be printed to the console.
 
-### Example:
+### Example
 
 ```python
-from contextManager import MariaDBCM
+from contextManager.contextManager import MariaDBCM
 import pandas as pd
 
 # Our query we are using
@@ -36,19 +38,14 @@ host = "HOST"
 user = "USER"
 password = "PASSWORD"
 database = "DATABASE_NAME"
-port = "3306" # The default MariaDB port
+port = 3306 # The default MariaDB port
+connection_params = {"user": user, "password": password, "host": host, "port": 3306, "database": database}
 
-# items to enter: host: str, user: str, password: str, database: str, port: int
-with MariaDBCM(host, user, password, database, port) as conn:
-    conn.cur.execute(query)
-    rows = conn.cur.fetchall()
-    # Get column names
-    cols = []
-    for item in list(conn.cur.description):
-        cols.append(item[0])
+# A dictionary containing results, column names and warnings
+results = MariaDBCM(**connection_params).execute(query)
 
 # Show data in a dataframe
-df = pd.DataFrame(rows, columns=cols)
+df = pd.DataFrame(results["data"], columns=results["columns"])
 ```
 
 ## Supported Data Types
