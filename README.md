@@ -10,7 +10,7 @@
 Once you have your enviornment set up, run the following in your terminal or command line to get the latest version:
 
 ```bash
-pip install MariaDB_Context_Manager@pip install --upgrade git+https://github.com/avgra3/MariaDB-Context-Manager.git
+pip install --upgrade git+https://github.com/avgra3/MariaDB-Context-Manager.git
 ```
 
 __Note:__ For Linux or Mac systems, you may need to change "pip" to "pip3".
