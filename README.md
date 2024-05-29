@@ -25,7 +25,7 @@ If you encounter an error/exception while trying to connect to the database, the
 ### Example
 
 ```python
-from contextManager import MariaDBCM
+from contextManager.contextManager import MariaDBCM
 import pandas as pd
 
 # Our query we are using

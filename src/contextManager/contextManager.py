@@ -28,10 +28,8 @@ class MariaDBCM:
             host=self.host,
             port=self.port,
             database=self.database,
-            dictionary=self.return_dict,
-            prepared=self.prepared,
         )
-        self.cur = self.conn.cursor()
+        self.cur = self.conn.cursor(dictionary=self.return_dict, prepared=self.prepared,)
 
     def __enter__(self):
         return self
