@@ -49,7 +49,7 @@ class MariaDBCM:
         result = {}
         cols = []
         with self.conn as conn:
-            self.cur.execute(query)
+            self.cur.execute(query.strip())
             for item in list(self.cur.description):
                 cols.append(item[0])
             result["columns"] = cols
@@ -59,3 +59,11 @@ class MariaDBCM:
                 result["data"] = self.cur.fetchall()
             self.cur.close()
         return result
+    
+    def execute_many(self, queries: str) -> list:
+        results = []
+        for query in queries.split(";"):
+            result = self.execute(query=query)
+            results.append(result)
+        return results
+        
