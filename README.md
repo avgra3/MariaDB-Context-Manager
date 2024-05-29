@@ -1,7 +1,9 @@
 # MariaDB Conext Manager
 ## Simpler setup
 
-```pip install mariadb-context-manager```
+```bash
+pip install mariadb-context-manager
+```
 
 
 ## Manual Setup
