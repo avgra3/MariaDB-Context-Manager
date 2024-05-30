@@ -21,7 +21,7 @@ jobs:
         with:
           python-version: "${{ matrix.python_version }}"
           #python-version: "3.x"
-          allow_prereleases: false
+          allow-prereleases: false
       - name: Install mariadb-connector-c
         run: sudo apt-get install -y mariadb-client
       - name: Install pypa/build
