@@ -12,6 +12,8 @@ class MariaDBCM:
         port: int,
         return_dict: bool = False,
         prepared: bool = False,
+        # Allows for loading infile
+        allow_load_infile: bool = False,
     ):
         print("Initializing connection...\n")
         self.user = user
@@ -21,6 +23,7 @@ class MariaDBCM:
         self.database = database
         self.return_dict = return_dict
         self.prepared = prepared
+        self.allow_load_infile = allow_load_infile
         # Makes our connection to mariadb
         self.conn = mariadb.connect(
             user=self.user,
@@ -28,6 +31,7 @@ class MariaDBCM:
             host=self.host,
             port=self.port,
             database=self.database,
+            local_infile=self.allow_load_infile,
         )
         self.cur = self.conn.cursor(
             dictionary=self.return_dict,
@@ -46,24 +50,45 @@ class MariaDBCM:
             print(f"traceback: {traceback}")
         return True
 
+    def __check_connection_open(self) -> bool:
+        if self.cur.closed:
+            return False
+        return True
+
     def execute(self, query: str) -> dict:
         result = {}
         cols = []
-        with self.conn as conn:
-            self.cur.execute(query.strip())
-            for item in list(self.cur.description):
-                cols.append(item[0])
-            result["columns"] = cols
-            result["statement_ran"] = self.cur.statement
-            result["warnings"] = self.cur.warnings
-            if self.cur.rowcount > 0:
-                result["data"] = self.cur.fetchall()
-            self.cur.close()
+        if query.strip() != "":
+            with self.conn as conn:
+                self.cur.execute(query)
+                if self.cur.description:
+                    for item in list(self.cur.description):
+                        cols.append(item[0])
+                result["columns"] = cols
+                result["statement_ran"] = self.cur.statement
+                result["warnings"] = self.cur.warnings
+                if self.cur.rowcount > 0 and self.cur.description:
+                    result["data"] = self.cur.fetchall()
+        else:
+            print("No query given")
+        self.cur.close()
         return result
 
     def execute_many(self, queries: str) -> list:
         results = []
-        for query in queries.split(";"):
-            result = self.execute(query=query)
+        for query in queries.strip().split(";"):
+            if not self.__check_connection_open():
+                self.conn = mariadb.connect(
+                    user=self.user,
+                    password=self.password,
+                    host=self.host,
+                    port=self.port,
+                    database=self.database,
+                    local_infile=self.allow_load_infile,
+                )
+                self.cur = self.conn.cursor(
+                    dictionary=self.return_dict, prepared=self.prepared
+                )
+            result = self.execute(query)
             results.append(result)
         return results
