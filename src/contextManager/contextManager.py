@@ -90,11 +90,14 @@ class MariaDBCM:
             cursor.callproc(stored_procedure_name, inputs)
             result = {}
             cols = []
+            types = []
             if cursor.sp_outparams:
                 result["data"] = cursor.fetchall()
             if cursor.description:
                 for item in list(cursor.description):
                     cols.append(item[0])
+                    types.append(item[1])
             result["columns"] = cols
             result["warnings"] = cursor.warnings
             result["rowcount"] = cursor.rowcount
+            result["data_types"] = {result["columns"][i]: mariadb_to_python(result["types"][i]) for i in range(len(result["columns"]))}
