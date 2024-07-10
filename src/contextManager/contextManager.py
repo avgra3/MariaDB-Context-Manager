@@ -1,5 +1,5 @@
 import mariadb
-from mariadb.constants import FIELD_TYPE
+from conversions import conversions
 
 # This will implement a context manager to work with MariaDB
 class MariaDBCM:
@@ -31,6 +31,7 @@ class MariaDBCM:
             port=self.port,
             database=self.database,
             local_infile=self.allow_load_infile,
+            converter=conversions
         )
 
     def __enter__(self):
@@ -97,41 +98,3 @@ class MariaDBCM:
             result["columns"] = cols
             result["warnings"] = cursor.warnings
             result["rowcount"] = cursor.rowcount
-
-    # Preparing our Conversion of MariaDB datatypes to Python
-    """
-    DECIMAL = 0
-    TINY = 1
-    SHORT = 2
-    LONG = 3
-    FLOAT = 4
-    DOUBLE = 5
-    NULL = 6
-    TIMESTAMP = 7
-    LONGLONG = 8
-    INT24 = 9
-    DATE = 10
-    TIME = 11
-    DATETIME = 12
-    YEAR = 13
-    NEWDATE = 14
-    VARCHAR = 15
-    BIT = 16
-    TIMESTAMP2 = 17
-    DATETIME2 = 18
-    TIME2 = 19
-    JSON = 245
-    NEWDECIMAL = 246
-    ENUM = 247
-    SET = 248
-    TINY_BLOB = 249
-    MEDIUM_BLOB = 250
-    LONG_BLOB = 251
-    BLOB = 252
-    VAR_STRING = 253
-    STRING = 254
-    GEOMETRY = 255
-    """
-
-    def decimals(number):
-        return float(number)
