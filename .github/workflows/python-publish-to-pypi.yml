@@ -7,37 +7,37 @@ permissions:
   contents: read
 
 jobs:
-  build:
-      name: Build distribution
-      runs-on: ubuntu-latest
-      strategy:
-        matrix:
-          python_version: ["3.8", "3.9", "3.10", "3.11", "3.12"]
-      steps:
-      - uses: actions/checkout@v4
-      - name: Setting up python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "${{ matrix.python_version }}"
-          allow-prereleases: false
-      - name: Install mariadb-connector-c
-        run: sudo apt-get install -y mariadb-client
-      - name: Install pypa/build
-        run: >-
-          python3 -m
-          pip install
-          build
-          --user
-      - name: Build a binary wheel and a source tarball
-        run: python3 -m build
-      - name: Store the distribution packages
-        uses: actions/upload-artifact@v4
-        with:
-          name: python-package-distributions
-          path: dist/
+  #build:
+  #    name: Build distribution
+  #    runs-on: ubuntu-latest
+  #    strategy:
+  #      matrix:
+  #        python_version: ["3.8", "3.9", "3.10", "3.11", "3.12"]
+  #    steps:
+  #    - uses: actions/checkout@v4
+  #    - name: Setting up python
+  #      uses: actions/setup-python@v5
+  #      with:
+  #        python-version: "${{ matrix.python_version }}"
+  #        allow-prereleases: false
+  #    - name: Install mariadb-connector-c
+  #      run: sudo apt-get install -y mariadb-client
+  #    - name: Install pypa/build
+  #      run: >-
+  #        python3 -m
+  #        pip install
+  #        build
+  #        --user
+  #    - name: Build a binary wheel and a source tarball
+  #      run: python3 -m build
+  #    - name: Store the distribution packages
+  #      uses: actions/upload-artifact@v4
+  #      with:
+  #        name: python-package-distributions
+  #        path: dist/
 
   publish-to-pypi:
-    needs: [build]
+    #needs: [build]
     name: >-
         Publish Python package to PyPI
     runs-on: ubuntu-latest
