@@ -1,70 +1,29 @@
-from mariadb.constants import FIELD_TYPE
-from datetime import datetime, date, time
+from datetime import date, datetime, time
 import json
 
-"""
-    Need to add these later on:
 
-    FIELD_TYPE.SET: func,
-    FIELD_TYPE.BIT: func,
-    FIELD_TYPE.LONG: func,
-    FIELD_TYPE.TINY_BLOB: func,
-    FIELD_TYPE.MEDIUM_BLOB: func,
-    FIELD_TYPE.LONG_BLOB: func,
-    FIELD_TYPE.GEOMETRY: func,
-    FIELD_TYPE.TIME: func,
-    FIELD_TYPE.TIME2: func,
-    FIELD_TYPE.TIMESTAMP: func,
-    FIELD_TYPE.TIMESTAMP2: func,
-    FIELD_TYPE.BLOB: func,
-    FIELD_TYPE.ENUM: func,
-"""
-
-def strings(string):
-    return str(string)
-
-def decimals(number):
-    return float(number)
-
-def integers(number):
-    return int(number)
-
-def floats(number):
-    return float(number)
-
-def handle_null(value):
-    return None
-
-def date_times(date):
-    string_date = str(date)
-    format = "%y-%m-%d %H:%M:%S"
-    return datetime.strptime(string_date, format)
-
-def dates(date):
-    string_date = str(date)
-    format = "%y-%m-%d"
-    return datetime.strptime(string_date, format).date()
-
-def jsons(json_object):
-    return json.dump(json_object)
-
-conversions = {
-    FIELD_TYPE.DECIMAL: decimals,
-    FIELD_TYPE.TINY: integers,
-    FIELD_TYPE.SHORT: integers,    
-    FIELD_TYPE.FLOAT: floats,
-    FIELD_TYPE.DOUBLE: floats,
-    FIELD_TYPE.NULL: handle_null,
-    FIELD_TYPE.INT24: integers,
-    FIELD_TYPE.DATE: dates,
-    FIELD_TYPE.LONGLONG: integers,
-    FIELD_TYPE.DATETIME: date_times,
-    FIELD_TYPE.YEAR: integers,
-    FIELD_TYPE.NEWDATE: dates,
-    FIELD_TYPE.VARCHAR: strings,
-    FIELD_TYPE.DATETIME2: date_times,
-    FIELD_TYPE.JSON: jsons,
-    FIELD_TYPE.NEWDECIMAL: decimals,
-    FIELD_TYPE.VAR_STRING: integers,
-    FIELD_TYPE.STRING: integers,
-}
+def mariadb_to_python(value: int):
+    if value in [15, 253, 254]:
+        return str
+    if value in [8, 1, 2, 3, 8, 9]:
+        return int
+    if value in [246, 0, 4, 5]:
+        return float
+    if value in [248]:
+        return set
+    if value in [10, 14, 18]:
+        return date
+    if value in [7, 11, 17, 19]:
+        return time
+    if value in [12]:
+        return datetime
+    if value in [13]:
+        return date.year
+    if value in [6]:
+        return None
+    if value in [16, 249, 250, 251, 252]:
+        return bytes
+    if value in [245]:
+        return json
+    # Catches anything else and returns string
+    return str

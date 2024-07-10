@@ -1,5 +1,6 @@
 import mariadb
-from conversions import conversions
+from conversions import mariadb_to_python
+
 
 # This will implement a context manager to work with MariaDB
 class MariaDBCM:
@@ -31,7 +32,6 @@ class MariaDBCM:
             port=self.port,
             database=self.database,
             local_infile=self.allow_load_infile,
-            converter=conversions
         )
 
     def __enter__(self):
@@ -71,7 +71,7 @@ class MariaDBCM:
                 result["statement_ran"] = cursor.statement
                 result["warnings"] = cursor.warnings
                 result["rowcount"] = cursor.rowcount
-                # result["meta_data"] = cursor.metadata
+                result["data_types"] = {result["columns"][i]: self.mariadb_to_python(result["types"][i]) for i in range(len(result["columns"]))}
         else:
             print("No query given")
 
