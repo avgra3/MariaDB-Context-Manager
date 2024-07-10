@@ -42,10 +42,14 @@ port = 3306 # The default MariaDB port
 connection_params = {"user": user, "password": password, "host": host, "port": 3306, "database": database}
 
 # A dictionary containing results, column names and warnings
-results = MariaDBCM(**connection_params).execute(query)
+with MariaDBCM(**connection_params) as maria:
+    result_dictionary = maria.execute(query)
 
 # Show data in a dataframe
 df = pd.DataFrame(results["data"], columns=results["columns"])
+
+# Maps the MariaDB data types to Python data types
+df = df.astype(results["data_types"])
 ```
 
 ## Supported Data Types
