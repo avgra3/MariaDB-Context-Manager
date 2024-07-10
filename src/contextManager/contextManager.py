@@ -71,7 +71,7 @@ class MariaDBCM:
                 result["statement_ran"] = cursor.statement
                 result["warnings"] = cursor.warnings
                 result["rowcount"] = cursor.rowcount
-                result["data_types"] = {result["columns"][i]: self.mariadb_to_python(result["types"][i]) for i in range(len(result["columns"]))}
+                result["data_types"] = {result["columns"][i]: mariadb_to_python(result["types"][i]) for i in range(len(result["columns"]))}
         else:
             print("No query given")
 
