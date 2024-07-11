@@ -19,8 +19,6 @@ def mariadb_to_python(value: int):
         return datetime
     if value in [13]:
         return date.year
-    if value in [6]:
-        return None
     if value in [16, 249, 250, 251, 252]:
         return bytes
     if value in [245]:
