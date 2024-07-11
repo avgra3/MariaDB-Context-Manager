@@ -12,17 +12,12 @@ jobs:
   build:
       name: Build distribution
       runs-on: self-hosted
-      #runs-on: ubuntu-latest
-      strategy:
-        matrix:
-          python_version: ["3.8.*", "3.9.*", "3.10.*", "3.11.*", "3.12.*"]
-          #python_version: ["3.x"]
       steps:
       - uses: actions/checkout@v4
       - name: Setting up python
         uses: actions/setup-python@v5
         with:
-          python-version: "${{ matrix.python_version }}"
+          python-version: "3.x"
           allow-prereleases: false
       - name: Install mariadb-connector-c
         run: sudo apt-get install -y mariadb-client
