@@ -1,4 +1,4 @@
-name: Publish mariadb-context-manager to PyPi
+name: PyPi
 
 on:
   release:
