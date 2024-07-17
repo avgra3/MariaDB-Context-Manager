@@ -11,7 +11,7 @@ setuptools.setup(
     description="A context manager to use with Python to easily connect and run querries in MariaDB",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="package URL",
+    url='http://pypi.python.org/pypi/MariaDB-Context-Manager',
     project_urls={
         "Bug Tracker": "https://github.com/avgra3/MariaDB-Context-Manager/issues",
     },
