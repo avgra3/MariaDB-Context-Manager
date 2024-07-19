@@ -1,20 +1,20 @@
 import mariadb
-from conversions import mariadb_to_python
+from .conversions import mariadb_to_python
 
 
 # This will implement a context manager to work with MariaDB
 class MariaDBCM:
     def __init__(
-            self,
-            host: str,
-            user: str,
-            password: str,
-            database: str,
-            port: int,
-            return_dict: bool = False,
-            prepared: bool = False,
-            # Allows for loading infile
-            allow_load_infile: bool = False,
+        self,
+        host: str,
+        user: str,
+        password: str,
+        database: str,
+        port: int,
+        return_dict: bool = False,
+        prepared: bool = False,
+        # Allows for loading infile
+        allow_load_infile: bool = False,
     ):
         self.user = user
         self.password = password
@@ -56,7 +56,9 @@ class MariaDBCM:
         field_flags = []
         if query.strip() != "":
             with self.conn as conn:
-                cursor = conn.cursor(dictionary=self.return_dict, prepared=self.prepared)
+                cursor = conn.cursor(
+                    dictionary=self.return_dict, prepared=self.prepared
+                )
                 cursor.execute(query)
                 if cursor.rowcount >= 0 and cursor.description:
                     result["data"] = cursor.fetchall()
@@ -71,7 +73,10 @@ class MariaDBCM:
                 result["statement_ran"] = cursor.statement
                 result["warnings"] = cursor.warnings
                 result["rowcount"] = cursor.rowcount
-                result["data_types"] = {result["columns"][i]: mariadb_to_python(result["types"][i]) for i in range(len(result["columns"]))}
+                result["data_types"] = {
+                    result["columns"][i]: mariadb_to_python(result["types"][i])
+                    for i in range(len(result["columns"]))
+                }
         else:
             print("No query given")
 
@@ -100,4 +105,7 @@ class MariaDBCM:
             result["columns"] = cols
             result["warnings"] = cursor.warnings
             result["rowcount"] = cursor.rowcount
-            result["data_types"] = {result["columns"][i]: mariadb_to_python(result["types"][i]) for i in range(len(result["columns"]))}
+            result["data_types"] = {
+                result["columns"][i]: mariadb_to_python(result["types"][i])
+                for i in range(len(result["columns"]))
+            }
