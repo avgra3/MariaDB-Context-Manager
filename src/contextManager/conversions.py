@@ -22,6 +22,7 @@ def mariadb_to_python(value: int):
     if value in [16, 249, 250, 251, 252]:
         return bytes
     if value in [245]:
-        return json
+        # This value returns JSON data
+        return dict
     # Catches anything else and returns string
     return str
