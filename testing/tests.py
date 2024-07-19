@@ -1,8 +1,11 @@
 import unittest
+import sys
 from datetime import date, datetime, time
-from ..src.contextManager.conversions import mariadb_to_python
-from ..src.contextManager.contextManager import MariaDBCM
 
+sys.path.append("..")
+
+from src.contextManager.conversions import mariadb_to_python
+from src.contextManager.contextManager import MariaDBCM
 
 class TestConversions(unittest.TestCase):
     def test_string_conversion_success(self):
