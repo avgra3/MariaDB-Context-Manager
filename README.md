@@ -1,15 +1,16 @@
 # MariaDB Conext Manager
-## Simpler setup
+
+## Installation
 
 ```bash
 pip install mariadb-context-manager
 ```
 
+## Manual Installation
 
-## Manual Setup
 ### Setting Up
 
-Once you have your enviornment set up, run the following in your terminal or command line to get the latest version:
+Once you have your enviornment is set up, run the following in your terminal or command line to get the latest version:
 
 ```bash
 pip install --upgrade git+https://github.com/avgra3/MariaDB-Context-Manager.git
@@ -24,11 +25,12 @@ Before you run your query, make sure that you have MariaDB installed locally or 
 
 If you encounter an error/exception while trying to connect to the database, the connection will be closed and the exception will be printed to the console.
 
-### Example
+#### Example
 
 ```python
 from contextManager.contextManager import MariaDBCM
 import pandas as pd
+import polars as pl
 
 # Our query we are using
 query = """SELECT * FROM table;"""
@@ -39,7 +41,13 @@ user = "USER"
 password = "PASSWORD"
 database = "DATABASE_NAME"
 port = 3306 # The default MariaDB port
-connection_params = {"user": user, "password": password, "host": host, "port": 3306, "database": database}
+connection_params = {
+    "user": user,
+    "password": password,
+    "host": host,
+    "port": port,
+    "database": database,
+}
 
 # A dictionary containing results, column names and warnings
 with MariaDBCM(**connection_params) as maria:
@@ -50,6 +58,15 @@ df = pd.DataFrame(results["data"], columns=results["columns"])
 
 # Maps the MariaDB data types to Python data types
 df = df.astype(results["data_types"])
+
+# Using Polars with some inital prep
+prep = {}
+i = 0
+for column in result_dictionary["columns"]:
+    prep[column] = [x[0] for x in result_dictionary["data"]]
+
+
+df_pl = pl.DataFrame(prep)
 ```
 
 ## Supported Data Types
