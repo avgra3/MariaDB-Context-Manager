@@ -1,5 +1,5 @@
 import mariadb
-from .conversions import mariadb_to_python
+from .conversions import mariadb_to_python, conversions
 
 
 # This will implement a context manager to work with MariaDB
@@ -15,6 +15,8 @@ class MariaDBCM:
         prepared: bool = False,
         # Allows for loading infile
         allow_load_infile: bool = False,
+        # Add functionality for converter
+        converter: dict = {}
     ):
         self.user = user
         self.password = password
@@ -24,6 +26,11 @@ class MariaDBCM:
         self.return_dict = return_dict
         self.prepared = prepared
         self.allow_load_infile = allow_load_infile
+        if converter:
+            self.converter = converter
+        else:
+            self.converter = conversions
+
         # Makes our connection to mariadb
         self.conn = mariadb.connect(
             user=self.user,
@@ -32,6 +39,7 @@ class MariaDBCM:
             port=self.port,
             database=self.database,
             local_infile=self.allow_load_infile,
+            converter=self.converter,
         )
 
     def __enter__(self):
