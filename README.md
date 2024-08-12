@@ -23,6 +23,7 @@ git clone https://github.com/avgra3/MariaDB-Context-Manager.git
 cd ./MariaDB-Context-Manager
 python -m pip install --upgrade build
 python -m build
+python -m pip install install ./dist/MariaDB_Context_Manager-0.1.4-py3-none-any.whl
 ```
 
 __Note:__ For Linux or Mac systems, you may need to change "pip" to "pip3".
