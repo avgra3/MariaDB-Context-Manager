@@ -1,5 +1,6 @@
 import mariadb
 from .conversions import conversions
+from .combined_types import convert, make_type_dictionary
 
 
 # This will implement a context manager to work with MariaDB
@@ -11,12 +12,12 @@ class MariaDBCM:
         password: str,
         database: str,
         port: int,
+        converter: dict | None,
         return_dict: bool = False,
         prepared: bool = False,
         # Allows for loading infile
         allow_load_infile: bool = False,
         # Add functionality for converter
-        converter: dict = {}
     ):
         self.user = user
         self.password = password
@@ -59,32 +60,21 @@ class MariaDBCM:
 
     def execute(self, query: str) -> dict:
         result = {}
-        cols = []
-        types = []
-        field_flags = []
         if query.strip() != "":
             with self.conn as conn:
                 cursor = conn.cursor(
                     dictionary=self.return_dict, prepared=self.prepared
                 )
                 cursor.execute(query)
+                metadata = cursor.metadata
                 if cursor.rowcount >= 0 and cursor.description:
                     result["data"] = cursor.fetchall()
-                if cursor.description:
-                    for item in list(cursor.description):
-                        cols.append(item[0])
-                        types.append(item[1])
-                        field_flags.append(item[7])
-                result["columns"] = cols
-                result["types"] = types
-                result["field_flags"] = field_flags
+                result["columns"] = metadata["field"]
+                result["types"] = convert(metadata["type"])
                 result["statement_ran"] = cursor.statement
                 result["warnings"] = cursor.warnings
                 result["rowcount"] = cursor.rowcount
-                result["data_types"] = {
-                    result["columns"][i]: mariadb_to_python(result["types"][i])
-                    for i in range(len(result["columns"]))
-                }
+                result["data_types"] = make_type_dictionary(column_names=result["columns"], data_types=result["types"])
         else:
             print("No query given")
 
@@ -102,18 +92,12 @@ class MariaDBCM:
             cursor = conn.cursor(dictionary=self.return_dict, prepared=self.prepared)
             cursor.callproc(stored_procedure_name, inputs)
             result = {}
-            cols = []
-            types = []
+            metadata = cursor.metadata
             if cursor.sp_outparams:
                 result["data"] = cursor.fetchall()
-            if cursor.description:
-                for item in list(cursor.description):
-                    cols.append(item[0])
-                    types.append(item[1])
-            result["columns"] = cols
+            result["columns"] = metadata["field"]
+            result["types"] = convert(metadata["type"])
             result["warnings"] = cursor.warnings
             result["rowcount"] = cursor.rowcount
-            result["data_types"] = {
-                result["columns"][i]: mariadb_to_python(result["types"][i])
-                for i in range(len(result["columns"]))
-            }
+            result["data_types"] = make_type_dictionary(column_names=result["columns"], data_types=result["types"])
+        return result
