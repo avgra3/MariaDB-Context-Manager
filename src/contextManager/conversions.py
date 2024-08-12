@@ -1,27 +1,24 @@
 from datetime import date, datetime, time
-import json
+from mariadb.constants import FIELD_TYPE, INDICATOR
 
+"""Create Conversion Functions"""
+def convert_to_string(s):
+    return str(s)
 
-def mariadb_to_python(value: int):
-    if value in [15, 253, 254]:
-        return str
-    if value in [8, 1, 2, 3, 8, 9]:
-        return int
-    if value in [246, 0, 4, 5]:
-        return float
-    if value in [248]:
-        return set
-    if value in [10, 14, 18]:
-        return date
-    if value in [7, 11, 17, 19]:
-        return time
-    if value in [12]:
-        return datetime
-    if value in [13]:
-        return date.year
-    if value in [16, 249, 250, 251, 252]:
-        return bytes
-    if value in [245]:
-        return json
-    # Catches anything else and returns string
-    return str
+def convert_to_int(s):
+    return int(s)
+
+def convert_to_float(s):
+    return float(s)
+
+def convert_to_set(s):
+    return {value for value in s}
+
+def none_to_mariadb_none(s):
+    return INDICATOR.NULL
+
+conversions = {
+     **{FIELD_TYPE.LONG: convert_to_float},
+     **{FIELD_TYPE.NULL: none_to_mariadb_none},
+     **{FIELD_TYPE.LONGLONG: convert_to_float},
+}
