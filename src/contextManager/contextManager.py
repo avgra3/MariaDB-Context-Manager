@@ -1,5 +1,5 @@
 import mariadb
-from .conversions import mariadb_to_python, conversions
+from .conversions import conversions
 
 
 # This will implement a context manager to work with MariaDB
