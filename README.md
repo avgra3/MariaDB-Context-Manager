@@ -16,6 +16,15 @@ Once you have your enviornment is set up, run the following in your terminal or 
 pip install --upgrade git+https://github.com/avgra3/MariaDB-Context-Manager.git
 ```
 
+An alternative to this would be to do the following:
+
+```bash
+git clone https://github.com/avgra3/MariaDB-Context-Manager.git
+cd ./MariaDB-Context-Manager
+python -m pip install --upgrade build
+python -m build
+```
+
 __Note:__ For Linux or Mac systems, you may need to change "pip" to "pip3".
 __Note:__ For Anaconda/Miniconda users, this module is not currently in any repositories, however, you can still use pip to install MariaDB package using the same command as above - but be aware that it may cause conflicts with packages you are using.
 
