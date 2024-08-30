@@ -1,10 +1,13 @@
 from pathlib import Path
 import toml
+import importlib.util as importer
+
 
 # Importing Local package
-spec = importer.spec_from_file_location("context-manager", str(Path("../context-manager/context-manager.py").resolve()))
+spec = importer.spec_from_file_location("context-manager", str(Path("../contextManager/contextManager.py").resolve()))
 mariadb_context_manager = importer.module_from_spec(spec)
 spec.loader.exec_module(mariadb_context_manager)
+
 
 # Get Current Config
 def get_configuration() -> dict[str, any]:
@@ -17,10 +20,25 @@ def get_configuration() -> dict[str, any]:
 
 config = get_configuration()
 
+
 # Test We can Connect
 def test_connect():
-    connection = mariadb_context_manager.MariaDBCM(**self.mariadb_conn_params)
+    # connection = mariadb_context_manager.MariaDBCM(**config)
     test_query = "SHOW PROCESSLIST;"
-    results = connection.execute(connection)
-    for item in results:
-        print(item)
+    # results = connection.execute(test_query)
+    #results = mariadb_context_manager.MariaDBCM(**config).execute(test_query)
+    #for item in results:
+    #    print(item)
+
+    with mariadb_context_manager.MariaDBCM(**config) as con:
+        result = con.execute(test_query)
+        for r in result:
+            print(r)
+
+
+def main():
+    test_connect()
+
+
+if __name__ == "__main__":
+    main()
