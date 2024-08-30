@@ -1,16 +1,29 @@
 # MariaDB Conext Manager
-## Simpler setup
 
-```pip install mariadb-context-manager```
+## Installation
 
+```bash
+pip install mariadb-context-manager
+```
 
-## Manual Setup
+## Manual Installation
+
 ### Setting Up
 
-Once you have your enviornment set up, run the following in your terminal or command line.
+Once you have your enviornment is set up, run the following in your terminal or command line to get the latest version:
 
+```bash
+pip install --upgrade git+https://github.com/avgra3/MariaDB-Context-Manager.git
 ```
-pip install -r requirements.txt
+
+An alternative to this would be to do the following:
+
+```bash
+git clone https://github.com/avgra3/MariaDB-Context-Manager.git
+cd ./MariaDB-Context-Manager
+python -m pip install --upgrade build
+python -m build
+python -m pip install install ./dist/MariaDB_Context_Manager-0.1.4-py3-none-any.whl
 ```
 
 __Note:__ For Linux or Mac systems, you may need to change "pip" to "pip3".
@@ -22,10 +35,10 @@ Before you run your query, make sure that you have MariaDB installed locally or 
 
 If you encounter an error/exception while trying to connect to the database, the connection will be closed and the exception will be printed to the console.
 
-### Example:
+#### Example
 
 ```python
-from contextManager import MariaDBCM
+from contextManager.contextManager import MariaDBCM
 import pandas as pd
 import polars as pl
 
@@ -37,20 +50,25 @@ host = "HOST"
 user = "USER"
 password = "PASSWORD"
 database = "DATABASE_NAME"
-port = "3306" # The default MariaDB port
+port = 3306 # The default MariaDB port
+connection_params = {
+    "user": user,
+    "password": password,
+    "host": host,
+    "port": port,
+    "database": database,
+}
 
-# items to enter: host: str, user: str, password: str, database: str, port: int
-with MariaDBCM(host, user, password, database, port) as conn:
-    conn.cur.execute(query)
-    rows = conn.cur.fetchall()
-    # Get column names
-    cols = []
-    for item in list(conn.cur.description):
-        cols.append(item[0])
+# A dictionary containing results, column names and warnings
+with MariaDBCM(**connection_params) as maria:
+    result_dictionary = maria.execute(query)
 
 # Show data in a dataframe
+<<<<<<< HEAD
 # Pandas
-df = pd.DataFrame(rows, columns=cols)
+df = pd.DataFrame(results["data"], columns=results["columns"])
+# Maps the MariaDB data types to Python data types
+df = df.astype(results["data_types"])
 
 # Polars
 prep = {}
