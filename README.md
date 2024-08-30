@@ -64,7 +64,6 @@ with MariaDBCM(**connection_params) as maria:
     result_dictionary = maria.execute(query)
 
 # Show data in a dataframe
-<<<<<<< HEAD
 # Pandas
 df = pd.DataFrame(results["data"], columns=results["columns"])
 # Maps the MariaDB data types to Python data types
