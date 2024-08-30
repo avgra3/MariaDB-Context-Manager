@@ -27,6 +27,7 @@ If you encounter an error/exception while trying to connect to the database, the
 ```python
 from contextManager import MariaDBCM
 import pandas as pd
+import polars as pl
 
 # Our query we are using
 query = """SELECT * FROM table;"""
@@ -48,7 +49,18 @@ with MariaDBCM(host, user, password, database, port) as conn:
         cols.append(item[0])
 
 # Show data in a dataframe
+# Pandas
 df = pd.DataFrame(rows, columns=cols)
+
+# Polars
+prep = {}
+column = 0
+for field in result_dictionary["columns"]:
+    column_data = [x[column] for x in result_dictionary["data"]]
+    prep[field] = column_data
+    column+=1
+
+df_pl = pl.DataFrame(prep)
 ```
 
 ## Supported Data Types
