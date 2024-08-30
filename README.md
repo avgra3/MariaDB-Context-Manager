@@ -64,17 +64,19 @@ with MariaDBCM(**connection_params) as maria:
     result_dictionary = maria.execute(query)
 
 # Show data in a dataframe
+<<<<<<< HEAD
+# Pandas
 df = pd.DataFrame(results["data"], columns=results["columns"])
-
 # Maps the MariaDB data types to Python data types
 df = df.astype(results["data_types"])
 
-# Using Polars with some inital prep
+# Polars
 prep = {}
-i = 0
-for column in result_dictionary["columns"]:
-    prep[column] = [x[0] for x in result_dictionary["data"]]
-
+column = 0
+for field in result_dictionary["columns"]:
+    column_data = [x[column] for x in result_dictionary["data"]]
+    prep[field] = column_data
+    column+=1
 
 df_pl = pl.DataFrame(prep)
 ```

@@ -12,8 +12,9 @@ class MariaDBCM:
         password: str,
         database: str,
         port: int,
+        buffered: bool = True,
         # Add functionality for converter
-        converter: dict | None,
+        converter: dict | None = None,
         return_dict: bool = False,
         prepared: bool = False,
         # Allows for loading infile
@@ -24,29 +25,24 @@ class MariaDBCM:
         self.host = host
         self.port = port
         self.database = database
-        self.return_dict = return_dict
-        self.prepared = prepared
+        self.buffered = buffered
         self.allow_load_infile = allow_load_infile
-        if converter:
-            self.converter = converter
-        else:
-            self.converter = conversions
-
         # Makes our connection to mariadb
-        self.conn = mariadb.connect(
-            user=self.user,
-            password=self.password,
-            host=self.host,
-            port=self.port,
-            database=self.database,
-            local_infile=self.allow_load_infile,
-            converter=self.converter,
-        )
+        self.conn = mariadb.connect(user=self.user,
+                                    password=self.password,
+                                    host=self.host,
+                                    port=self.port,
+                                    database=self.database,
+                                    local_infile=self.allow_load_infile)
+        self.cur = self.conn.cursor()
 
     def __enter__(self):
+        print(f"Connection to {self.database} was made")
         return self
 
     def __exit__(self, exc_type, exc_value, traceback):
+        self.conn.close()
+        print('\nConnection has been closed...\n')
         if exc_type:
             print(f"exc_type: {exc_type}")
             print(f"exc_value: {exc_value}")
@@ -57,6 +53,20 @@ class MariaDBCM:
         if self.conn.cursor().closed:
             return False
         return True
+
+    def __remove_comments(self, query: str) -> str:
+        updated_query = ""
+        for line in query.splitlines():
+            if not (line.strip()).startswith("--"):
+                updated_query += line.strip()
+
+    def execute_change(self, statement: str, parameters: tuple) -> dict:
+        if statement.strip() != "" and parameters is not None:
+            ran_statement = self.cur.execute_many(statement, parameters)
+            statement_results = {"statement": ran_statement.statement,
+                                 "rows_updated": ran_statement.rowcount,
+                                 "number_of_warnings": ran_statement.warnings}
+            return statement_results
 
     def execute(self, query: str) -> dict:
         result = {}
@@ -73,7 +83,8 @@ class MariaDBCM:
                 result["statement_ran"] = cursor.statement
                 result["warnings"] = cursor.warnings
                 result["rowcount"] = cursor.rowcount
-                result["data_types"] = make_type_dictionary(column_names=result["columns"], data_types=result["types"])
+                result["data_types"] = make_type_dictionary(
+                    column_names=result["columns"], data_types=result["types"])
         else:
             print("No query given")
 
@@ -88,7 +99,8 @@ class MariaDBCM:
 
     def execute_stored_procedure(self, stored_procedure_name: str, inputs: tuple = ()):
         with self.conn as conn:
-            cursor = conn.cursor(dictionary=self.return_dict, prepared=self.prepared)
+            cursor = conn.cursor(
+                dictionary=self.return_dict, prepared=self.prepared)
             cursor.callproc(stored_procedure_name, inputs)
             result = {}
             metadata = cursor.metadata
@@ -97,5 +109,6 @@ class MariaDBCM:
             result["columns"] = metadata["field"]
             result["warnings"] = cursor.warnings
             result["rowcount"] = cursor.rowcount
-            result["data_types"] = make_type_dictionary(column_names=result["columns"], data_types=result["types"])
+            result["data_types"] = make_type_dictionary(
+                column_names=result["columns"], data_types=result["types"])
         return result
