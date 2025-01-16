@@ -14,7 +14,7 @@ class MariaDBCM:
         port: int,
         buffered: bool = True,
         # Add functionality for converter
-        converter: dict | None = None,
+        converter: dict = None,
         return_dict: bool = False,
         prepared: bool = False,
         # Allows for loading infile
