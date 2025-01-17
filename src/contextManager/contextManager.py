@@ -28,12 +28,14 @@ class MariaDBCM:
         self.buffered = buffered
         self.allow_load_infile = allow_load_infile
         # Makes our connection to mariadb
-        self.conn = mariadb.connect(user=self.user,
-                                    password=self.password,
-                                    host=self.host,
-                                    port=self.port,
-                                    database=self.database,
-                                    local_infile=self.allow_load_infile)
+        self.conn = mariadb.connect(
+            user=self.user,
+            password=self.password,
+            host=self.host,
+            port=self.port,
+            database=self.database,
+            local_infile=self.allow_load_infile,
+        )
         self.cur = self.conn.cursor()
 
     def __enter__(self):
@@ -42,7 +44,7 @@ class MariaDBCM:
 
     def __exit__(self, exc_type, exc_value, traceback):
         self.conn.close()
-        print('\nConnection has been closed...\n')
+        print("\nConnection has been closed...\n")
         if exc_type:
             print(f"exc_type: {exc_type}")
             print(f"exc_value: {exc_value}")
@@ -63,9 +65,11 @@ class MariaDBCM:
     def execute_change(self, statement: str, parameters: tuple) -> dict:
         if statement.strip() != "" and parameters is not None:
             ran_statement = self.cur.execute_many(statement, parameters)
-            statement_results = {"statement": ran_statement.statement,
-                                 "rows_updated": ran_statement.rowcount,
-                                 "number_of_warnings": ran_statement.warnings}
+            statement_results = {
+                "statement": ran_statement.statement,
+                "rows_updated": ran_statement.rowcount,
+                "number_of_warnings": ran_statement.warnings,
+            }
             return statement_results
 
     def execute(self, query: str) -> dict:
@@ -84,7 +88,8 @@ class MariaDBCM:
                 result["warnings"] = cursor.warnings
                 result["rowcount"] = cursor.rowcount
                 result["data_types"] = make_type_dictionary(
-                    column_names=result["columns"], data_types=result["types"])
+                    column_names=result["columns"], data_types=result["types"]
+                )
         else:
             print("No query given")
 
@@ -99,8 +104,7 @@ class MariaDBCM:
 
     def execute_stored_procedure(self, stored_procedure_name: str, inputs: tuple = ()):
         with self.conn as conn:
-            cursor = conn.cursor(
-                dictionary=self.return_dict, prepared=self.prepared)
+            cursor = conn.cursor(dictionary=self.return_dict, prepared=self.prepared)
             cursor.callproc(stored_procedure_name, inputs)
             result = {}
             metadata = cursor.metadata
@@ -110,5 +114,6 @@ class MariaDBCM:
             result["warnings"] = cursor.warnings
             result["rowcount"] = cursor.rowcount
             result["data_types"] = make_type_dictionary(
-                column_names=result["columns"], data_types=result["types"])
+                column_names=result["columns"], data_types=result["types"]
+            )
         return result
