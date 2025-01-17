@@ -1,6 +1,6 @@
 [project]
 name = "MariaDB_Context_Manager"
-version = "0.1.16"
+version = "0.1.17"
 authors = [
   { name="Antony", email="antonygradillas@gmail.com" },
 ]
@@ -22,5 +22,5 @@ Homepage = "https://github.com/avgra3/MariaDB-Context-Manager"
 Issues = "https://github.com/avgra3/MariaDB-Context-Manager/issues"
 
 [build-system]
-requires = ["setuptools>=61.0"]
+requires = ["setuptools>=75.8"]
 build-backend = "setuptools.build_meta"

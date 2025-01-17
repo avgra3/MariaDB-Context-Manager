@@ -5,13 +5,13 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setuptools.setup(
     name="MariaDB-Context-Manager",
-    version="0.1.16",
+    version="0.1.17",
     author="Antony",
     author_email="antonygradillas@gmail.com",
     description="A context manager to use with Python to easily connect and run querries in MariaDB",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url='http://pypi.python.org/pypi/MariaDB-Context-Manager',
+    url="http://pypi.python.org/pypi/MariaDB-Context-Manager",
     project_urls={
         "Bug Tracker": "https://github.com/avgra3/MariaDB-Context-Manager/issues",
     },
