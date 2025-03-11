@@ -1,0 +1,6 @@
+**/.git
+**/dist
+docker-compose.yml
+**/mariadb_data/
+start_int_tests.sh
+uv.lock
