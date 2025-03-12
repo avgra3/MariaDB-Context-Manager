@@ -74,15 +74,42 @@ assert sqlUpdateResult["rows_updated"] == 1
 
 # Execute change, with no parameters
 sqlUpdate = "UPDATE `testDB`.`testTable` SET `dateAdded` = '2025-01-01' WHERE `names` = 'John';"
-sqlUpdateResultNoParams = ourConn.execute_change(statement=sqlUpdate)
+sqlUpdateResultNoParams = ourConn.execute_change(
+    statement=sqlUpdate, parameters=None)
 assert sqlUpdateResultNoParams == {}
 
 # Execute change, with no statement
-sqlUpdateResultNoStatement = ourConn.execute_change(parameters=("John",))
+sqlUpdateResultNoStatement = ourConn.execute_change(
+    statement="", parameters=("John",))
 assert sqlUpdateResultNoStatement == {}
 
 # execute_many
+sqlExecuteMany = "SELECT `names` FROM `testDB`.`testTable` WHERE `names`='John'; SELECT `names` FROM `testDB`.`testTable` WHERE `names`='John';"
+sqlExecuteManyResult = ourConn.execute_many(queries=sqlExecuteMany)
+assert len(sqlExecuteManyResult) == 2
 
 # execute_stored_procedure
+# Need to first create the procedure
+sqlCreateStoredProcedure = """
+    CREATE OR REPLACE PROCEDURE getJohn(OUT johns_name VARCHAR(50))
+    BEGIN
+        SELECT `names` INTO johns_name FROM `testDB`.`testTable` WHERE `names`='John';
+    END
+"""
+createdStoredProcedure = ourConn.execute(sqlCreateStoredProcedure)
 
-# verify the results match expected
+# We expect nothing retured for creating a stored procedure
+assert len(createdStoredProcedure) == 0
+assert isinstance(createdStoredProcedure, dict)
+
+# Now check we can use the created stored procedure
+storedProcedureName = "getJohn"
+sqlExecuteStoredProcedure = ourConn.execute_stored_procedure(
+    stored_procedure_name=storedProcedureName,
+    inputs=("",),
+)
+assert sqlExecuteStoredProcedure["data"][0] == ("John",)
+assert sqlExecuteStoredProcedure["columns"][0] == "johns_name"
+assert sqlExecuteStoredProcedure["rowcount"] == 1
+assert sqlExecuteStoredProcedure["warnings"] == 0
+assert sqlExecuteStoredProcedure["data_types"]["johns_name"] == "str"

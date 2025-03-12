@@ -10,9 +10,20 @@ import logging
 
 
 class MariaDBCM:
-    __slots__ = ("host", "user", "password", "database", "port", "buffered",
-                 "converter", "return_dict", "prepared", "allow_local_infile",
-                 "conn", "cur")
+    __slots__ = (
+        "host",
+        "user",
+        "password",
+        "database",
+        "port",
+        "buffered",
+        "converter",
+        "return_dict",
+        "prepared",
+        "allow_local_infile",
+        "conn",
+        "cur",
+    )
 
     def __init__(
         self,
@@ -56,7 +67,7 @@ class MariaDBCM:
             datefmt="%Y-%m-%d %H:%M",
         )
 
-    def __new_con(self):
+    def __new_conn(self):
         if not self.__check_connection_open():
             logging.info("Connection closed. Reopening...")
             self.conn = mariadb.connect(
@@ -74,16 +85,18 @@ class MariaDBCM:
             logging.warning("Connection did not open...")
 
     def __enter__(self):
-        '''Information that there was a successful connection to the database.'''
+        """Information that there was a successful connection to the database."""
         logging.info(f"Connection to {self.database} was made")
         return self
 
     def __exit__(self, exc_type, exc_value, traceback):
-        '''Upon exit, the connection to the database is closed.'''
+        """Upon exit, the connection to the database is closed."""
         if self.conn.open:
-            self.logger.info("Closing connection...")
+            # self.
+            logging.info("Closing connection...")
             self.conn.close()
-        self.logger.info("\nConnection has been closed...\n")
+        # self.
+        logging.info("\nConnection has been closed...\n")
         if exc_type:
             logging.error(f"exc_type: {exc_type}")
             logging.error(f"exc_value: {exc_value}")
@@ -107,20 +120,21 @@ class MariaDBCM:
         for line in query.splitlines():
             if not (line.strip()).startswith("--"):
                 updated_query += line.strip()
+        return updated_query
 
     def execute_change(
-        self, statement: str, parameters: list[tuple, ...]
+        self, statement: str = "", parameters: list[tuple, ...] = None
     ) -> dict[str, any]:
-        '''statement: The SQL update script
+        """statement: The SQL update script
         parameters: that are used in the update.
-        Returns a dictionary of information from results of changes.'''
-        if statement.strip() == "" or statement is None or parameters is None:
-            if statement.strip() == "" or statement is None:
-                logging.warning("SQL statement used was empty")
-            if parameters is None:
-                logging.warning("No parameters were useed")
+        Returns a dictionary of information from results of changes."""
+        if statement.strip() == "":
+            logging.warning("SQL statement used was empty...")
             return {}
-        self.__new_con()
+        if parameters is None:
+            logging.warning("No parameters were used...")
+            return {}
+        self.__new_conn()
         with self.conn as conn:
             cur = conn.cursor(
                 **{
@@ -129,14 +143,14 @@ class MariaDBCM:
                 }
             )
             if (
-                statement.strip() != "" and
-                statement is not None and
-                isinstance(statement, str) and
-                parameters is not None and
-                isinstance(parameters, list) and
-                isinstance(parameters[0], tuple) and
-                len(parameters) >= 1 and
-                len(parameters[0]) >= 1
+                statement.strip() != ""
+                and statement is not None
+                and isinstance(statement, str)
+                and parameters is not None
+                and isinstance(parameters, list)
+                and isinstance(parameters[0], tuple)
+                and len(parameters) >= 1
+                and len(parameters[0]) >= 1
             ):
                 cur.executemany(statement, parameters)
                 statement_results = {
@@ -148,11 +162,11 @@ class MariaDBCM:
                 return statement_results
 
     def execute(self, query: str) -> dict[dict, any]:
-        '''Execute a SQL query. This can be used for
+        """Execute a SQL query. This can be used for
         updates, deletes, inserts which do not need parameters.
-        query: str which contains the SQL query ran.'''
+        query: str which contains the SQL query ran."""
         result = {}
-        self.__new_con()
+        self.__new_conn()
         if query.strip() != "":
             with self.conn as conn:
                 cursor = conn.cursor(
@@ -177,38 +191,42 @@ class MariaDBCM:
                     result["rowcount"] = cursor.rowcount
 
         else:
-            logging.warning(f"No query was given. {query}")
+            logging.warning(f"No query was given...\tQuery received: \"{query}\"")
         return result
 
     def execute_many(self, queries: str) -> list[dict[str, any]]:
-        '''Similar to execute but allows for many queries to be ran
+        """Similar to execute but allows for many queries to be ran
         sequentially.
         Note: This is not a sophisticated query execution and expects that
         all queries are delimited by a ";", and there are no semicolons
         used within queries.
         queries: str, run many queries.
-        Returns a list of dictionaries from the execute method.'''
+        Returns a list of dictionaries from the execute method."""
         results = []
         for query in queries.strip().split(";"):
-            result = self.execute(query)
-            results.append(result)
+            if query.strip() != "":
+                result = self.execute(query)
+                results.append(result)
         return results
 
     def execute_stored_procedure(
         self, stored_procedure_name: str, inputs: tuple = (),
     ) -> dict[str, any]:
-        '''Execution of stored procedures.
+        """
+        Execution of stored procedures.
         stored_procedure_name: str, the name of the stored procedure.
         inputs: tuple, all inputs that would be needed for the given
             stored procedure.
         Note: this assumes the stored procedure exists and the user
             knows the needed parameters.
-        Returns a dictionary similar to execute.'''
+        Returns a dictionary similar to execute.
+        """
+        self.__new_conn()
+        result = {}
+        logging.info(f"Current conn: {self.conn}")
         with self.conn as conn:
-            cursor = conn.cursor(
-                dictionary=self.return_dict, prepared=self.prepared)
+            cursor = conn.cursor()
             cursor.callproc(stored_procedure_name, inputs)
-            result = {}
             metadata = cursor.metadata
             if cursor.sp_outparams:
                 result["data"] = cursor.fetchall()
@@ -216,6 +234,6 @@ class MariaDBCM:
             result["warnings"] = cursor.warnings
             result["rowcount"] = cursor.rowcount
             result["data_types"] = make_type_dictionary(
-                column_names=result["columns"], data_types=result["types"]
+                column_names=result["columns"], mariadb_data_types=metadata["type"]
             )
         return result
