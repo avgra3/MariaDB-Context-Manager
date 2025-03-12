@@ -1,5 +1,4 @@
 from pathlib import Path
-import toml
 import importlib.util as importer
 
 
@@ -10,15 +9,20 @@ spec.loader.exec_module(mariadb_context_manager)
 
 
 # Get Current Config
-def get_configuration() -> dict[str, any]:
-    # Load in configuration
-    with open("config.toml", "r") as config:
-        configuration = toml.load(config)
-    mariadb_conn_params: dict[str, any] = {"user": configuration["database"]["username"], "password": configuration["database"]["password"], "host": configuration["server"]["host"], "port": configuration["server"]["port"], "database": configuration["database"]["database"]}
-    return mariadb_conn_params
+# Database connection parameters
+user = "testUser"
+password = "testUserPassword"
+host = "192.168.92.22"
+port = 3306
+database = "testDB"
+connectionParams = {
+    "user": user,
+    "password": password,
+    "host": host,
+    "port": port,
+    "database": database,
+}
 
-
-config = get_configuration()
 
 
 # Test We can Connect
@@ -30,7 +34,7 @@ def test_connect():
     #for item in results:
     #    print(item)
 
-    with mariadb_context_manager.MariaDBCM(**config) as con:
+    with mariadb_context_manager.MariaDBCM(**connectionParams) as con:
         result = con.execute(test_query)
         for r in result:
             print(r)

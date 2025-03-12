@@ -1,13 +1,13 @@
 [project]
 name = "MariaDB_Context_Manager"
-version = "0.1.17"
+version = "1.0.0"
 authors = [
   { name="Antony", email="antonygradillas@gmail.com" },
 ]
 description = "An easy to use mariadb context manager"
 readme = {file = "README.md", content-type = "text/markdown"}
 license = { file = "LICENCE.txt" }
-requires-python = ">=3.8"
+requires-python = ">=3.9"
 dependencies = [
   "mariadb>=1.1.10",
 ]

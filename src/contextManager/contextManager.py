@@ -1,10 +1,30 @@
 import mariadb
 from .conversions import conversions
 from .combined_types import make_type_dictionary
+import logging
+
+# Logger format
+# FORMAT = "%(asctime)s %(clientip)-15s %(user)-8s %(message)s"
+# logging.basicConfig(format=FORMAT)
+# logger = logging.getLogger()
 
 
-# This will implement a context manager to work with MariaDB
 class MariaDBCM:
+    __slots__ = (
+        "host",
+        "user",
+        "password",
+        "database",
+        "port",
+        "buffered",
+        "converter",
+        "return_dict",
+        "prepared",
+        "allow_local_infile",
+        "conn",
+        "cur",
+    )
+
     def __init__(
         self,
         host: str,
@@ -18,7 +38,7 @@ class MariaDBCM:
         return_dict: bool = False,
         prepared: bool = False,
         # Allows for loading infile
-        allow_load_infile: bool = False,
+        allow_local_infile: bool = False,
     ):
         self.user = user
         self.password = password
@@ -26,7 +46,9 @@ class MariaDBCM:
         self.port = port
         self.database = database
         self.buffered = buffered
-        self.allow_load_infile = allow_load_infile
+        self.allow_local_infile = allow_local_infile
+        self.return_dict = return_dict
+        self.prepared = prepared
         # Makes our connection to mariadb
         self.conn = mariadb.connect(
             user=self.user,
@@ -34,79 +56,177 @@ class MariaDBCM:
             host=self.host,
             port=self.port,
             database=self.database,
-            local_infile=self.allow_load_infile,
+            local_infile=self.allow_local_infile,
+            converter=conversions,
         )
-        self.cur = self.conn.cursor()
+        # Logger format
+        FORMAT = "{asctime} - {levelname} - {message}"
+        logging.basicConfig(
+            format=FORMAT,
+            style="{",
+            datefmt="%Y-%m-%d %H:%M",
+        )
+
+    def __new_conn(self):
+        if not self.__check_connection_open():
+            logging.info("Connection closed. Reopening...")
+            self.conn = mariadb.connect(
+                user=self.user,
+                password=self.password,
+                host=self.host,
+                port=self.port,
+                database=self.database,
+                local_infile=self.allow_local_infile,
+                converter=conversions,
+            )
+            if self.__check_connection_open():
+                logging.info("Connection opened succesffully!")
+                return
+            logging.warning("Connection did not open...")
 
     def __enter__(self):
-        print(f"Connection to {self.database} was made")
+        """Information that there was a successful connection to the database."""
+        logging.info(f"Connection to {self.database} was made")
         return self
 
     def __exit__(self, exc_type, exc_value, traceback):
-        self.conn.close()
-        print("\nConnection has been closed...\n")
+        """Upon exit, the connection to the database is closed."""
+        if self.conn.open:
+            # self.
+            logging.info("Closing connection...")
+            self.conn.close()
+        # self.
+        logging.info("\nConnection has been closed...\n")
         if exc_type:
-            print(f"exc_type: {exc_type}")
-            print(f"exc_value: {exc_value}")
-            print(f"traceback: {traceback}")
+            logging.error(f"exc_type: {exc_type}")
+            logging.error(f"exc_value: {exc_value}")
+            logging.error(f"traceback: {traceback}")
         return self
 
     def __check_connection_open(self) -> bool:
-        if self.conn.cursor().closed:
-            return False
-        return True
+        """Checks that the connection to the database is open.
+        Returns False if the connection is closed, otherwise open."""
+        try:
+            self.conn.open
+            return True
+        except Exception:
+            logging.warning("Connection is closed...")
+        return False
 
     def __remove_comments(self, query: str) -> str:
+        """Removes comments from a given query
+        query: str, the SQL statement that is used."""
         updated_query = ""
         for line in query.splitlines():
             if not (line.strip()).startswith("--"):
                 updated_query += line.strip()
+        return updated_query
 
-    def execute_change(self, statement: str, parameters: tuple) -> dict:
-        if statement.strip() != "" and parameters is not None:
-            ran_statement = self.cur.execute_many(statement, parameters)
-            statement_results = {
-                "statement": ran_statement.statement,
-                "rows_updated": ran_statement.rowcount,
-                "number_of_warnings": ran_statement.warnings,
-            }
-            return statement_results
+    def execute_change(
+        self, statement: str = "", parameters: list[tuple, ...] = None
+    ) -> dict[str, any]:
+        """statement: The SQL update script
+        parameters: that are used in the update.
+        Returns a dictionary of information from results of changes."""
+        if statement.strip() == "":
+            logging.warning("SQL statement used was empty...")
+            return {}
+        if parameters is None:
+            logging.warning("No parameters were used...")
+            return {}
+        self.__new_conn()
+        with self.conn as conn:
+            cur = conn.cursor(
+                **{
+                    "dictionary": self.return_dict,
+                    "prepared": self.prepared,
+                }
+            )
+            if (
+                statement.strip() != ""
+                and statement is not None
+                and isinstance(statement, str)
+                and parameters is not None
+                and isinstance(parameters, list)
+                and isinstance(parameters[0], tuple)
+                and len(parameters) >= 1
+                and len(parameters[0]) >= 1
+            ):
+                cur.executemany(statement, parameters)
+                statement_results = {
+                    "statement": cur.statement,
+                    "rows_updated": cur.rowcount,
+                    "number_of_warnings": cur.warnings,
+                    "warnings": self.conn.show_warnings() if cur.warnings > 0 else "",
+                }
+                return statement_results
 
-    def execute(self, query: str) -> dict:
+    def execute(self, query: str) -> dict[dict, any]:
+        """Execute a SQL query. This can be used for
+        updates, deletes, inserts which do not need parameters.
+        query: str which contains the SQL query ran."""
         result = {}
+        self.__new_conn()
         if query.strip() != "":
             with self.conn as conn:
                 cursor = conn.cursor(
-                    dictionary=self.return_dict, prepared=self.prepared
+                    **{
+                        "dictionary": self.return_dict,
+                        "prepared": self.prepared,
+                    }
                 )
                 cursor.execute(query)
                 metadata = cursor.metadata
-                if cursor.rowcount >= 0 and cursor.description:
-                    result["data"] = cursor.fetchall()
-                result["columns"] = metadata["field"]
-                result["statement_ran"] = cursor.statement
-                result["warnings"] = cursor.warnings
-                result["rowcount"] = cursor.rowcount
-                result["data_types"] = make_type_dictionary(
-                    column_names=result["columns"], data_types=result["types"]
-                )
-        else:
-            print("No query given")
+                if metadata is not None:
+                    if cursor.rowcount >= 0 and cursor.description:
+                        result["data"] = cursor.fetchall()
+                    if metadata["field"] is not None:
+                        result["columns"] = metadata["field"]
+                        result["data_types"] = make_type_dictionary(
+                            column_names=result["columns"],
+                            mariadb_data_types=metadata["type"],
+                        )
+                    result["statement_ran"] = cursor.statement
+                    result["warnings"] = cursor.warnings
+                    result["rowcount"] = cursor.rowcount
 
+        else:
+            logging.warning(f"No query was given...\tQuery received: \"{query}\"")
         return result
 
-    def execute_many(self, queries: str) -> list:
+    def execute_many(self, queries: str) -> list[dict[str, any]]:
+        """Similar to execute but allows for many queries to be ran
+        sequentially.
+        Note: This is not a sophisticated query execution and expects that
+        all queries are delimited by a ";", and there are no semicolons
+        used within queries.
+        queries: str, run many queries.
+        Returns a list of dictionaries from the execute method."""
         results = []
         for query in queries.strip().split(";"):
-            result = self.execute(query)
-            results.append(result)
+            if query.strip() != "":
+                result = self.execute(query)
+                results.append(result)
         return results
 
-    def execute_stored_procedure(self, stored_procedure_name: str, inputs: tuple = ()):
+    def execute_stored_procedure(
+        self, stored_procedure_name: str, inputs: tuple = (),
+    ) -> dict[str, any]:
+        """
+        Execution of stored procedures.
+        stored_procedure_name: str, the name of the stored procedure.
+        inputs: tuple, all inputs that would be needed for the given
+            stored procedure.
+        Note: this assumes the stored procedure exists and the user
+            knows the needed parameters.
+        Returns a dictionary similar to execute.
+        """
+        self.__new_conn()
+        result = {}
+        logging.info(f"Current conn: {self.conn}")
         with self.conn as conn:
-            cursor = conn.cursor(dictionary=self.return_dict, prepared=self.prepared)
+            cursor = conn.cursor()
             cursor.callproc(stored_procedure_name, inputs)
-            result = {}
             metadata = cursor.metadata
             if cursor.sp_outparams:
                 result["data"] = cursor.fetchall()
@@ -114,6 +234,6 @@ class MariaDBCM:
             result["warnings"] = cursor.warnings
             result["rowcount"] = cursor.rowcount
             result["data_types"] = make_type_dictionary(
-                column_names=result["columns"], data_types=result["types"]
+                column_names=result["columns"], mariadb_data_types=metadata["type"]
             )
         return result

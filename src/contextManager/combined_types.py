@@ -2,7 +2,7 @@ from mariadb.constants import FIELD_TYPE
 from typing import List, Dict
 
 
-def convert(value) -> str:
+def convert_to_python(value) -> str:
     if (
         value == FIELD_TYPE.DECIMAL
         or value == FIELD_TYPE.FLOAT
@@ -10,42 +10,49 @@ def convert(value) -> str:
         or value == FIELD_TYPE.NEWDECIMAL
     ):
         return "float"
-    elif (
+    if (
         value == FIELD_TYPE.INT24
         or value == FIELD_TYPE.TINY
         or value == FIELD_TYPE.SHORT
         or value == FIELD_TYPE.LONG
         or value == FIELD_TYPE.LONGLONG
+        or value == FIELD_TYPE.YEAR
     ):
         return "int"
-    elif (
+    if (
         value == FIELD_TYPE.VAR_STRING
         or value == FIELD_TYPE.STRING
         or value == FIELD_TYPE.VARCHAR
     ):
         return "str"
-    elif (
-        value == FIELD_TYPE.DATE
-        or value == FIELD_TYPE.TIME
-        or value == FIELD_TYPE.DATETIME
-        or value == FIELD_TYPE.YEAR
-        or value == FIELD_TYPE.TIMESTAMP
-        or value == FIELD_TYPE.NEWDATE
+    if (
+        value == FIELD_TYPE.TIMESTAMP
         or value == FIELD_TYPE.TIMESTAMP2
-        or value == FIELD_TYPE.DATETIME2
+    ):
+        return "timestamp"
+    if (
+        value == FIELD_TYPE.TIME
         or value == FIELD_TYPE.TIME2
     ):
-        return "str"
-    else:
-        return "str"
+        return "time"
+    if (
+        value == FIELD_TYPE.DATETIME
+        or value == FIELD_TYPE.DATETIME2
+    ):
+        return "datetime"
+    if (
+        value == FIELD_TYPE.DATE
+        or value == FIELD_TYPE.NEWDATE
+    ):
+        return "date"
+    return "str"
 
 
 def make_type_dictionary(
-    column_names: List[str], data_types: List[str]
+    column_names: List[str], mariadb_data_types: List[str]
 ) -> Dict[str, str]:
-    values = list(map(convert, data_types))
+    values = list(map(convert_to_python, mariadb_data_types))
     return {
-        column_names: data_types
-        for column_names, data_types in zip(column_names, values)
+        column_names: mariadb_data_types
+        for column_names, mariadb_data_types in zip(column_names, values)
     }
-

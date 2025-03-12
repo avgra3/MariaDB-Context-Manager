@@ -1,0 +1,64 @@
+services:
+  test-db:
+    container_name: test_mariadb
+    image: "mariadb:lts"
+    restart: unless-stopped
+    environment:
+      #- MARIADB_ROOT_PASSWORD=example
+      - MARIADB_RANDOM_ROOT_PASSWORD=1
+      - MARIADB_USER=testUser
+      - MARIADB_PASSWORD=testUserPassword
+      - MARIADB_MYSQL_LOCALHOST_GRANTS=testUser
+      - MARIADB_HEALTHCHECK_GRANTS
+    ports:
+        - "9999:3306"
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect"]
+      start_period: 10s
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    volumes:
+      - ./mariadb_data/data:/var/lib/mysql
+      # Allows us to use a predefined set of data
+      - ./mariadb_data/backup/001_setup.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      mariadbcm:
+        ipv4_address: 192.168.92.22
+
+  python-mdcm:
+    container_name: mariadbcm
+    # Build is where our dockerfile is located
+    build: .
+    volumes:
+      - ./testing/Integration/python-scripts/:/integrationTests
+    restart: unless-stopped
+    command: >
+      sh -c "uv run -v --no-project --with /srcFiles -p 3.9 --color always /integrationTests/test-actions.py"
+    depends_on:
+      test-db:
+        condition: service_healthy
+    networks:
+      mariadbcm:
+        ipv4_address: 192.168.92.23
+
+  adminer:
+    image: adminer:latest
+    container_name: adminer-test
+    ports:
+      - "9998:8080"
+    volumes:
+      - ./adminer/:/adminer/
+    restart: unless-stopped
+    depends_on:
+      - test-db
+    networks:
+      mariadbcm:
+        ipv4_address: 192.168.92.24
+
+networks:
+  mariadbcm:
+    ipam:
+      driver: default
+      config:
+        - subnet: "192.168.92.0/24"
