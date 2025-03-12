@@ -1,6 +1,6 @@
 [project]
 name = "MariaDB_Context_Manager"
-version = "0.1.17"
+version = "1.0.0"
 authors = [
   { name="Antony", email="antonygradillas@gmail.com" },
 ]

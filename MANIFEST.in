@@ -1,0 +1,7 @@
+recursive-include testing/Integration/ *.py
+prune src/testing
+exclude src/testing/*.py
+include LICENSE
+include MANIFEST.in
+include MANIFEST
+include README.md

@@ -19,7 +19,7 @@ pip install --upgrade git+https://github.com/avgra3/MariaDB-Context-Manager.git
 An alternative to this would be to do the following:
 
 ```bash
-git clone https://github.com/avgra3/MariaDB-Context-Manager.git
+git clone https://github.com/avgra3/MariaDB-Context-Manager.git --depth 1
 cd ./MariaDB-Context-Manager
 python -m pip install --upgrade build
 python -m build

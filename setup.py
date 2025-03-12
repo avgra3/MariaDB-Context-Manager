@@ -5,7 +5,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setuptools.setup(
     name="MariaDB-Context-Manager",
-    version="0.1.17",
+    version="1.0.0",
     author="Antony",
     author_email="antonygradillas@gmail.com",
     description="A context manager to use with Python to easily connect and run querries in MariaDB",
@@ -22,5 +22,5 @@ setuptools.setup(
     ],
     package_dir={"": "src"},
     packages=setuptools.find_packages(where="src"),
-    python_requires=">=3.8",
+    python_requires=">=3.9",
 )

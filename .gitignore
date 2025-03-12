@@ -10,3 +10,4 @@ uv.lock
 
 # Data file from docker-compose for testing
 mariadb_data/data/*
+adminer/
