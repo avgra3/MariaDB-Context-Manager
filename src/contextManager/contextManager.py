@@ -85,7 +85,9 @@ class MariaDBCM:
             logging.warning("Connection did not open...")
 
     def __enter__(self):
-        """Information that there was a successful connection to the database."""
+        """
+        Information that there was a successful connection to the database.
+        """
         logging.info(f"Connection to {self.database} was made")
         return self
 
@@ -153,11 +155,12 @@ class MariaDBCM:
                 and len(parameters[0]) >= 1
             ):
                 cur.executemany(statement, parameters)
+                warnings = self.conn.show_warnings() if cur.warnings > 0 else ""
                 statement_results = {
                     "statement": cur.statement,
                     "rows_updated": cur.rowcount,
                     "number_of_warnings": cur.warnings,
-                    "warnings": self.conn.show_warnings() if cur.warnings > 0 else "",
+                    "warnings": warnings,
                 }
                 return statement_results
 
@@ -191,7 +194,10 @@ class MariaDBCM:
                     result["rowcount"] = cursor.rowcount
 
         else:
-            logging.warning(f"No query was given...\tQuery received: \"{query}\"")
+            logging.warning(f"""
+            No query was given...
+            Query received: \"{query}\
+            """)
         return result
 
     def execute_many(self, queries: str) -> list[dict[str, any]]:
@@ -234,6 +240,7 @@ class MariaDBCM:
             result["warnings"] = cursor.warnings
             result["rowcount"] = cursor.rowcount
             result["data_types"] = make_type_dictionary(
-                column_names=result["columns"], mariadb_data_types=metadata["type"]
+                column_names=result["columns"],
+                mariadb_data_types=metadata["type"],
             )
         return result
