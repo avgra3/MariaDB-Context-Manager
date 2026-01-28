@@ -1,13 +1,8 @@
 import mariadb
 from .conversions import conversions
 from .combined_types import make_type_dictionary
-import logging
-
-# Logger format
-# FORMAT = "%(asctime)s %(clientip)-15s %(user)-8s %(message)s"
-# logging.basicConfig(format=FORMAT)
-# logger = logging.getLogger()
-
+from .constants import LOGGER
+from logging import Logger
 
 class MariaDBCM:
     __slots__ = (
@@ -39,16 +34,18 @@ class MariaDBCM:
         prepared: bool = False,
         # Allows for loading infile
         allow_local_infile: bool = False,
+        # Allows for user's own logger or to use the default one
+        logger: Logger = LOGGER
     ):
-        self.user = user
-        self.password = password
-        self.host = host
-        self.port = port
-        self.database = database
-        self.buffered = buffered
-        self.allow_local_infile = allow_local_infile
-        self.return_dict = return_dict
-        self.prepared = prepared
+        self.user: str = user
+        self.password: str = password
+        self.host: str = host
+        self.port: int = port
+        self.database: str = database
+        self.buffered: bool = buffered
+        self.allow_local_infile: bool = allow_local_infile
+        self.return_dict: dict = return_dict
+        self.prepared: bool = prepared
         # Makes our connection to mariadb
         self.conn = mariadb.connect(
             user=self.user,
@@ -59,17 +56,11 @@ class MariaDBCM:
             local_infile=self.allow_local_infile,
             converter=conversions,
         )
-        # Logger format
-        FORMAT = "{asctime} - {levelname} - {message}"
-        logging.basicConfig(
-            format=FORMAT,
-            style="{",
-            datefmt="%Y-%m-%d %H:%M",
-        )
+        self.logger: Logger = logger
 
     def __new_conn(self):
         if not self.__check_connection_open():
-            logging.info("Connection closed. Reopening...")
+            self.logger.info("Connection closed. Reopening...")
             self.conn = mariadb.connect(
                 user=self.user,
                 password=self.password,
@@ -80,29 +71,29 @@ class MariaDBCM:
                 converter=conversions,
             )
             if self.__check_connection_open():
-                logging.info("Connection opened succesffully!")
+                self.logger.info("Connection opened succesffully!")
                 return
-            logging.warning("Connection did not open...")
+            self.logger.warning("Connection did not open...")
 
     def __enter__(self):
         """
         Information that there was a successful connection to the database.
         """
-        logging.info(f"Connection to {self.database} was made")
+        self.logger.info(f"Connection to {self.database} was made")
         return self
 
     def __exit__(self, exc_type, exc_value, traceback):
         """Upon exit, the connection to the database is closed."""
         if self.conn.open:
             # self.
-            logging.info("Closing connection...")
+            self.logger.info("Closing connection...")
             self.conn.close()
         # self.
-        logging.info("\nConnection has been closed...\n")
+        self.logger.info("\nConnection has been closed...\n")
         if exc_type:
-            logging.error(f"exc_type: {exc_type}")
-            logging.error(f"exc_value: {exc_value}")
-            logging.error(f"traceback: {traceback}")
+            self.logger.error(f"exc_type: {exc_type}")
+            self.logger.error(f"exc_value: {exc_value}")
+            self.logger.error(f"traceback: {traceback}")
         return self
 
     def __check_connection_open(self) -> bool:
@@ -112,7 +103,7 @@ class MariaDBCM:
             self.conn.open
             return True
         except Exception:
-            logging.warning("Connection is closed...")
+            self.logger.warning("Connection is closed...")
         return False
 
     def __remove_comments(self, query: str) -> str:
@@ -131,10 +122,10 @@ class MariaDBCM:
         parameters: that are used in the update.
         Returns a dictionary of information from results of changes."""
         if statement.strip() == "":
-            logging.warning("SQL statement used was empty...")
+            self.logger.warning("SQL statement used was empty...")
             return {}
         if parameters is None:
-            logging.warning("No parameters were used...")
+            self.logger.warning("No parameters were used...")
             return {}
         self.__new_conn()
         with self.conn as conn:
@@ -194,7 +185,7 @@ class MariaDBCM:
                     result["rowcount"] = cursor.rowcount
 
         else:
-            logging.warning(f"""
+            self.logger.warning(f"""
             No query was given...
             Query received: \"{query}\
             """)
@@ -229,7 +220,7 @@ class MariaDBCM:
         """
         self.__new_conn()
         result = {}
-        logging.info(f"Current conn: {self.conn}")
+        self.logger.info(f"Current conn: {self.conn}")
         with self.conn as conn:
             cursor = conn.cursor()
             cursor.callproc(stored_procedure_name, inputs)
