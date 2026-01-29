@@ -1,8 +1,19 @@
 import mariadb
 from .conversions import conversions
-from .combined_types import make_type_dictionary
 from .constants import LOGGER
 from logging import Logger
+from dataclasses import dataclass
+from pathlib import Path
+import subprocess
+import sys
+
+@dataclass
+class MariaDBResult:
+    metadata: dict
+    result: list[tuple] | None = None
+    warning_count: int = 0
+    warnings: list[str] | None = None
+    query: str | None = None
 
 class MariaDBCM:
     __slots__ = (
@@ -46,192 +57,109 @@ class MariaDBCM:
         self.allow_local_infile: bool = allow_local_infile
         self.return_dict: dict = return_dict
         self.prepared: bool = prepared
-        # Makes our connection to mariadb
-        self.conn = mariadb.connect(
-            user=self.user,
-            password=self.password,
-            host=self.host,
-            port=self.port,
-            database=self.database,
-            local_infile=self.allow_local_infile,
-            converter=conversions,
+        self.pool_size: int = pool_size
+        self.pool_name: str = (
+                "mariadb_runner" + f"_{pool_name}"
+                if pool_name is not None and pool_name != ""
+            else ""
         )
-        self.logger: Logger = logger
+        # Makes our connection to mariadb
+        self.dbCons = {
+            "user": self.user,
+            "password": self.password,
+            "host": self.host, 
+            "port": self.port,
+            "database": self.database,
+            "local_infile": self.allow_local_infile,
+            "pool_size": self.pool_size,
+            "pool_reset_connection": True, 
+            "pool_name": self.pool_name, 
+            "converter": conversions,
+        }
+        self.pool = self._create_pool(**self.dbCons)
+        self.logger.er: Logger = logger
 
-    def __new_conn(self):
-        if not self.__check_connection_open():
-            self.logger.info("Connection closed. Reopening...")
-            self.conn = mariadb.connect(
-                user=self.user,
-                password=self.password,
-                host=self.host,
-                port=self.port,
-                database=self.database,
-                local_infile=self.allow_local_infile,
-                converter=conversions,
-            )
-            if self.__check_connection_open():
-                self.logger.info("Connection opened succesffully!")
-                return
-            self.logger.warning("Connection did not open...")
+    def _create_pool(self):
+        return mariadb.ConnectionPool(**self.dbCons)
 
-    def __enter__(self):
-        """
-        Information that there was a successful connection to the database.
-        """
-        self.logger.info(f"Connection to {self.database} was made")
-        return self
-
-    def __exit__(self, exc_type, exc_value, traceback):
-        """Upon exit, the connection to the database is closed."""
-        if self.conn.open:
-            # self.
-            self.logger.info("Closing connection...")
-            self.conn.close()
-        # self.
-        self.logger.info("\nConnection has been closed...\n")
-        if exc_type:
-            self.logger.error(f"exc_type: {exc_type}")
-            self.logger.error(f"exc_value: {exc_value}")
-            self.logger.error(f"traceback: {traceback}")
-        return self
-
-    def __check_connection_open(self) -> bool:
-        """Checks that the connection to the database is open.
-        Returns False if the connection is closed, otherwise open."""
-        try:
-            self.conn.open
-            return True
-        except Exception:
-            self.logger.warning("Connection is closed...")
-        return False
-
-    def __remove_comments(self, query: str) -> str:
-        """Removes comments from a given query
-        query: str, the SQL statement that is used."""
-        updated_query = ""
-        for line in query.splitlines():
-            if not (line.strip()).startswith("--"):
-                updated_query += line.strip()
-        return updated_query
-
-    def execute_change(
-        self, statement: str = "", parameters: list[tuple, ...] = None
-    ) -> dict[str, any]:
-        """statement: The SQL update script
-        parameters: that are used in the update.
-        Returns a dictionary of information from results of changes."""
-        if statement.strip() == "":
-            self.logger.warning("SQL statement used was empty...")
-            return {}
-        if parameters is None:
-            self.logger.warning("No parameters were used...")
-            return {}
-        self.__new_conn()
-        with self.conn as conn:
-            cur = conn.cursor(
-                **{
-                    "dictionary": self.return_dict,
-                    "prepared": self.prepared,
-                }
-            )
-            if (
-                statement.strip() != ""
-                and statement is not None
-                and isinstance(statement, str)
-                and parameters is not None
-                and isinstance(parameters, list)
-                and isinstance(parameters[0], tuple)
-                and len(parameters) >= 1
-                and len(parameters[0]) >= 1
-            ):
-                cur.executemany(statement, parameters)
-                warnings = self.conn.show_warnings() if cur.warnings > 0 else ""
-                statement_results = {
-                    "statement": cur.statement,
-                    "rows_updated": cur.rowcount,
-                    "number_of_warnings": cur.warnings,
-                    "warnings": warnings,
-                }
-                return statement_results
-
-    def execute(self, query: str) -> dict[dict, any]:
-        """Execute a SQL query. This can be used for
-        updates, deletes, inserts which do not need parameters.
-        query: str which contains the SQL query ran."""
-        result = {}
-        self.__new_conn()
-        if query.strip() != "":
-            with self.conn as conn:
-                cursor = conn.cursor(
-                    **{
-                        "dictionary": self.return_dict,
-                        "prepared": self.prepared,
-                    }
+    def run_direct_sql(self, sql: Path) -> MariaDBResult:
+        temp_password = (
+            self.dbCons["password"]
+            if self.dbCons["password"] == "forget1c"
+            else "forget1c"
+        )
+        with open(sql, "r") as f:
+            try:
+                result = subprocess.run(
+                    [
+                        "mariadb",
+                        f"--user={self.dbCons['user']}",
+                        f"--password={temp_password}",
+                        f"--host={self.dbCons['host']}",
+                        f"--port={self.dbCons['port']}",
+                        "--show-warnings",
+                        "-v",
+                        "-v",
+                        "-v",
+                        self.dbCons["database"],
+                    ],
+                    capture_output=True,
+                    text=True,
+                    stdin=f,
+                    check=True,
                 )
-                cursor.execute(query)
-                metadata = cursor.metadata
-                if metadata is not None:
-                    if cursor.rowcount >= 0 and cursor.description:
-                        result["data"] = cursor.fetchall()
-                    if metadata["field"] is not None:
-                        result["columns"] = metadata["field"]
-                        result["data_types"] = make_type_dictionary(
-                            column_names=result["columns"],
-                            mariadb_data_types=metadata["type"],
+            except subprocess.CalledProcessError as e:
+                self.logger.critical(f"Exception raised: {e}")
+                sys.exit(-1)
+        self.logger.info(result.stdout)
+        if result.stderr is not None:
+            self.logger.error(result.stderr)
+        mariaResult = MariaDBResult(
+            metadata={"direct_run": None},
+            result=[(result.stdout, result.stderr)],
+            query=sql.read_text(),
+        )
+        return mariaResult
+
+    def run_sql(self, sql_queries: list[str]) -> list[MariaDBResult]:
+        results: list[MariaDBResult] = []
+        try:
+            for sql in sql_queries:
+                with self.pool.get_connection() as conn:
+                    self.logger.info(f"Running sql script: {sql}")
+                    cur = conn.cursor()
+                    cur.execute(statement=sql)
+                    rowcount = cur.rowcount
+                    result = None
+                    meta = cur.metadata
+                    self.logger.info(f"Updated/Retrieved {rowcount:,} rows")
+                    if cur.warnings > 0:
+                        warning_count = cur.warnings
+                        warnings = conn.show_warnings()
+                        self.logger.warning(warnings)
+                    else:
+                        warning_count = 0
+                        warnings = None
+                    results.append(
+                        MariaDBResult(
+                            result=result,
+                            metadata=meta,
+                            warning_count=warning_count,
+                            warnings=warnings,
                         )
-                    result["statement_ran"] = cursor.statement
-                    result["warnings"] = cursor.warnings
-                    result["rowcount"] = cursor.rowcount
+                    )
+                    cur.close()
+        except mariadb.ProgrammingError as e:
+            error_message: str = f"ProgrammingError => {e}"
+            self.logger.error(error_message)
+            sys.exit(-1)
 
-        else:
-            self.logger.warning(f"""
-            No query was given...
-            Query received: \"{query}\
-            """)
-        return result
-
-    def execute_many(self, queries: str) -> list[dict[str, any]]:
-        """Similar to execute but allows for many queries to be ran
-        sequentially.
-        Note: This is not a sophisticated query execution and expects that
-        all queries are delimited by a ";", and there are no semicolons
-        used within queries.
-        queries: str, run many queries.
-        Returns a list of dictionaries from the execute method."""
-        results = []
-        for query in queries.strip().split(";"):
-            if query.strip() != "":
-                result = self.execute(query)
-                results.append(result)
-        return results
-
-    def execute_stored_procedure(
-        self, stored_procedure_name: str, inputs: tuple = (),
-    ) -> dict[str, any]:
-        """
-        Execution of stored procedures.
-        stored_procedure_name: str, the name of the stored procedure.
-        inputs: tuple, all inputs that would be needed for the given
-            stored procedure.
-        Note: this assumes the stored procedure exists and the user
-            knows the needed parameters.
-        Returns a dictionary similar to execute.
-        """
-        self.__new_conn()
-        result = {}
-        self.logger.info(f"Current conn: {self.conn}")
-        with self.conn as conn:
-            cursor = conn.cursor()
-            cursor.callproc(stored_procedure_name, inputs)
-            metadata = cursor.metadata
-            if cursor.sp_outparams:
-                result["data"] = cursor.fetchall()
-            result["columns"] = metadata["field"]
-            result["warnings"] = cursor.warnings
-            result["rowcount"] = cursor.rowcount
-            result["data_types"] = make_type_dictionary(
-                column_names=result["columns"],
-                mariadb_data_types=metadata["type"],
+        except mariadb.Error as e:
+            error_message: str = (
+                f"""An error occured while running the previous sql.
+                Review error message for details => {e}"""
             )
-        return result
+            self.logger.error(error_message)
+            sys.exit(-1)
+        self.pool.close()
+        return results
