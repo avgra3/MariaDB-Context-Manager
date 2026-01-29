@@ -46,7 +46,10 @@ class MariaDBCM:
         # Allows for loading infile
         allow_local_infile: bool = False,
         # Allows for user's own logger or to use the default one
-        logger: Logger = LOGGER
+        logger: Logger = LOGGER,
+        # MariaDB Execution Pool Name
+        pool_name: str = "",
+        pool_size: int = 0,
     ):
         self.user: str = user
         self.password: str = password
