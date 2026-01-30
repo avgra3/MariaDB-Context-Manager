@@ -10,26 +10,37 @@ def convert_to_string(s):
 
 
 def convert_to_int(s):
-    return int(s)
+    try:
+        return int(s)
+    except ValueError:
+        raise ValueError(f"Value `{s}` cannot be cast to an int.")
 
 
 def convert_to_float(s):
-    return float(s)
-
+    try:
+        return float(s)
+    except ValueError:
+        raise ValueError(f"Value `{s}` cannot be cast to a float.")
 
 def convert_to_set(s):
-    return {value for value in s}
-
+    try:
+        return {value for value in s}
+    except ValueError:
+        raise ValueError(f"Value `{s}` cannot be cast to a set.")
 
 def convert_to_datetime(s):
     format_string = "%Y-%m-%d %H:%M:%S"
-    return datetime.strptime(s, format_string)
-
+    try:
+        return datetime.strptime(s, format_string)
+    except ValueError:
+        raise ValueError(f"Value `{s}` cannot be cast to a datetime")
 
 def convert_to_date(s):
     format_string = "%Y-%m-%d"
-    return datetime.strptime(s, format_string).date()
-
+    try:
+        return datetime.strptime(s, format_string).date()
+    except ValueError:
+        raise ValueError(f"Value `{s}` cannot be cast to a date")
 
 def none_to_mariadb_none(s):
     return INDICATOR.NULL

@@ -1,5 +1,5 @@
 [project]
-name = "MariaDB_Context_Manager"
+name = "mariadb_context_manager"
 version = "2.0.0"
 authors = [
   { name="Antony", email="antonygradillas@gmail.com" },
@@ -23,7 +23,6 @@ classifiers = [
 Homepage = "https://github.com/avgra3/MariaDB-Context-Manager"
 Repository = "https://github.com/avgra3/MariaDB-Context-Manager"
 Issues = "https://github.com/avgra3/MariaDB-Context-Manager/issues"
-
 
 [tool.setuptools.packages.find]
 where = ["src"]
