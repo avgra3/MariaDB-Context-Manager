@@ -27,14 +27,23 @@ services:
         ipv4_address: 192.168.92.22
 
   python-mdcm:
-    container_name: mariadbcm
+    container_name: mariadbcm:latest
     # Build is where our dockerfile is located
     build: .
     volumes:
-      - ./testing/Integration/python-scripts/:/integrationTests
+      # - ./testing/Integration/python-scripts/:/integrationTests
+      - .:/srcFiles
     restart: unless-stopped
-    command: >
-      sh -c "uv run -v --no-project --with /srcFiles -p 3.9 --color always /integrationTests/test-actions.py"
+    environment:
+      - PYTHON_VERSION=3.11
+      - MARIADB_USER=testUser
+      - MARIADB_PASSWORD=testUserPassword
+      - MARIADB_MYSQL_LOCALHOST_GRANTS=testUser
+      - MARIADB_HOST=192.168.92.22
+      - MARIADB_PORT=3306
+      - MARIADB_DB=testDB
+    # command: >
+    #   bash -c "ls -la ; uv run srcFiles/Testing/integrationTests/test-actions.py"
     depends_on:
       test-db:
         condition: service_healthy

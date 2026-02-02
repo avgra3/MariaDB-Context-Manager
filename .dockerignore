@@ -1,6 +1,6 @@
 **/.git
 **/dist
-docker-compose.yml
-**/mariadb_data/
-start_int_tests.sh
+**/__pycache__
+**/.ruff_cache
+**/.venv
 uv.lock

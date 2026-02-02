@@ -5,6 +5,8 @@ from dataclasses import dataclass
 from pathlib import Path
 import subprocess
 import sys
+from typing import Sequence
+
 
 @dataclass
 class MariaDBResult():
@@ -13,6 +15,7 @@ class MariaDBResult():
     warning_count: int = 0
     warnings: list[str] | None = None
     query: str | None = None
+
 
 class MariaDBCM:
     # __slots__ = (
@@ -94,18 +97,13 @@ class MariaDBCM:
             return pool
 
     def run_direct_sql(self, sql: Path) -> MariaDBResult:
-        temp_password = (
-            self.dbCons["password"]
-            if self.dbCons["password"] == "forget1c"
-            else "forget1c"
-        )
         with open(sql, "r") as f:
             try:
                 result = subprocess.run(
                     [
                         "mariadb",
                         f"--user={self.dbCons['user']}",
-                        f"--password={temp_password}",
+                        f"--password={self.dbCons['password']}",
                         f"--host={self.dbCons['host']}",
                         f"--port={self.dbCons['port']}",
                         "--show-warnings",
@@ -134,7 +132,12 @@ class MariaDBCM:
         )
         return mariaResult
 
-    def run_sql(self, sql_queries: list[str]) -> list[MariaDBResult]:
+    def run_sql(
+            self,
+            sql_queries: list[str] | str,
+            data: Sequence = ()) -> list[MariaDBResult]:
+        if isinstance(sql_queries, str):
+            sql_queries = [sql_queries]
         results: list[MariaDBResult] = []
         try:
             for sql in sql_queries:
@@ -142,7 +145,7 @@ class MariaDBCM:
                     if self.logger is not None:
                         self.logger.info(f"Running sql script: {sql}")
                     cur = conn.cursor()
-                    cur.execute(statement=sql)
+                    cur.execute(statement=sql, data=data)
                     rowcount = cur.rowcount
                     result = None
                     meta = cur.metadata

@@ -1,3 +1,3 @@
 #!/bin/sh
 
-python -m unittest discover -s tests -vvv
+uv run python -m unittest discover -s tests -vvv

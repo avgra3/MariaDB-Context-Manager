@@ -36,4 +36,5 @@ extend-select = ["E501"]
 [dependency-groups]
 dev = [
     "ruff>=0.14.6",
+    "ty>=0.0.14",
 ]
